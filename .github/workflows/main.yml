@@ -31,11 +31,13 @@ jobs:
             JRE_LINUX_URL: https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.3%2B7/OpenJDK17U-jre_x64_linux_hotspot_17.0.3_7.tar.gz
             JRE_WINDOWS_URL: https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.3%2B7/OpenJDK17U-jre_x64_windows_hotspot_17.0.3_7.zip
         run: |
-          wget -O packr.jar $PACKR_URL
-          wget -O jre-linux.tar.gz $JRE_LINUX_URL
-          wget -O jre-windows.zip $JRE_WINDOWS_URL
+          wget -qO packr.jar $PACKR_URL
+          wget -qO jre-linux.tar.gz $JRE_LINUX_URL
+          wget -qO jre-windows.zip $JRE_WINDOWS_URL
       - name: Build
-        run: ./gradlew desktop:dist --no-daemon
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: desktop:dist
       - name: Package Linux
         run: |
           java -jar packr.jar \
