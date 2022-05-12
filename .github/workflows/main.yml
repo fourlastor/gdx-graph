@@ -1,0 +1,56 @@
+name: Distribution Builds
+
+on:
+  push:
+    tags:
+      - v*
+  workflow_dispatch:
+
+jobs:
+  build:
+    env:
+      PYENV_ROOT: ${{ github.workspace }}/pyenv
+      PYTHON_ZIP_NAME: python-3.9.9.tar.gz
+      PYTHON_VERSION: 3.9.9
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install APT dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+          TZ: Europe/London
+        run: sudo apt-get install -y wget
+      - uses: actions/checkout@v3
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+      - name: Download Packr
+        env:
+            PACKR_URL: https://github.com/libgdx/packr/releases/download/4.0.0/packr-all-4.0.0.jar
+            JRE_LINUX_URL: https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.3%2B7/OpenJDK17U-jre_x64_linux_hotspot_17.0.3_7.tar.gz
+            JRE_WINDOWS_URL: https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.3%2B7/OpenJDK17U-jre_x64_windows_hotspot_17.0.3_7.zip
+        run: |
+          wget -O packr.jar $PACKR_URL
+          wget -O jre-linux.tar.gz JRE_LINUX_URL
+          wget -O jre-windows.zip JRE_WINDOWS_URL
+      - name: Build
+        run: ./gradlew desktop:dist --no-daemon
+      - name: Package Linux
+        run: |
+          java -jar packr.jar \
+            --platform linux64 \
+            --jdk jre-linux.tar \
+            --useZgcIfSupportedOs \
+            --executable gdx-graph-editor \
+            --classpath desktop/build/libs/desktop-0.6.2-SNAPSHOT.jar \
+            --mainclass com.gempukku.libgdx.graph.desktop.DesktopLauncher \
+            --vmargs Xmx1G \
+            --resources core/assets \
+            --output out-linux
+          tar -czf linux.zip out-linux
+#      - name: Release
+#        uses: softprops/action-gh-release@v1
+#        if: startsWith(github.ref, 'refs/tags/')
+#        with:
+#          files: ${{ env.PYTHON_ZIP_NAME }}
