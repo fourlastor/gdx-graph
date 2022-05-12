@@ -31,7 +31,9 @@ jobs:
           wget -qO jre-linux.tar.gz $JRE_LINUX_URL
           wget -qO jre-windows.zip $JRE_WINDOWS_URL
       - name: Build
-        run: ./gradlew desktop:dist --no-daemon
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: --no-daemon build
       - name: Package Linux
         run: |
           java -jar packr.jar \
