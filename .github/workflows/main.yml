@@ -8,10 +8,6 @@ on:
 
 jobs:
   build:
-    env:
-      PYENV_ROOT: ${{ github.workspace }}/pyenv
-      PYTHON_ZIP_NAME: python-3.9.9.tar.gz
-      PYTHON_VERSION: 3.9.9
     runs-on: ubuntu-latest
     steps:
       - name: Install APT dependencies
@@ -23,7 +19,7 @@ jobs:
       - uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '11'
           cache: 'gradle'
       - name: Download Packr
         env:
