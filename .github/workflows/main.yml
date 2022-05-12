@@ -8,6 +8,12 @@ on:
 
 jobs:
   build:
+    env:
+      PACKR: packr.jar
+      JRE_LINUX: jre-linux.tar.gz
+      JRE_WINDOWS: jre-windows.zip
+      LINUX_ZIP: gdx-graph-linux.zip
+      WINDOWS_ZIP: gdx-graph-windows.zip
     runs-on: ubuntu-latest
     steps:
       - name: Install APT dependencies
@@ -27,28 +33,47 @@ jobs:
             JRE_LINUX_URL: https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.3%2B7/OpenJDK17U-jre_x64_linux_hotspot_17.0.3_7.tar.gz
             JRE_WINDOWS_URL: https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.3%2B7/OpenJDK17U-jre_x64_windows_hotspot_17.0.3_7.zip
         run: |
-          wget -qO packr.jar $PACKR_URL
-          wget -qO jre-linux.tar.gz $JRE_LINUX_URL
-          wget -qO jre-windows.zip $JRE_WINDOWS_URL
+          wget -qO $PACKR $PACKR_URL
+          wget -qO $JRE_LINUX $JRE_LINUX_URL
+          wget -qO $JRE_WINDOWS $JRE_WINDOWS_URL
       - name: Build
         uses: gradle/gradle-build-action@v2
         with:
           arguments: --no-daemon build
       - name: Package Linux
+        env:
+          OUTDIR: out-linux
         run: |
-          java -jar packr.jar \
+          java -jar $PACKR \
             --platform linux64 \
-            --jdk jre-linux.tar.gz \
+            --jdk $JRE_LINUX \
             --useZgcIfSupportedOs \
             --executable gdx-graph-editor \
             --classpath desktop/build/libs/desktop-0.6.2-SNAPSHOT.jar \
             --mainclass com.gempukku.libgdx.graph.desktop.DesktopLauncher \
             --vmargs Xmx1G \
             --resources core/assets \
-            --output out-linux
-          tar -czf linux.zip out-linux
+            --output $OUTDIR
+          tar -czf $LINUX_ZIP $OUTDIR
+      - name: Package Windows
+        env:
+          OUTDIR: out-windows
+        run: |
+          java -jar $PACKR \
+            --platform windows64 \
+            --jdk $JRE_WINDOWS \
+            --useZgcIfSupportedOs \
+            --executable gdx-graph-editor \
+            --classpath desktop/build/libs/desktop-0.6.2-SNAPSHOT.jar \
+            --mainclass com.gempukku.libgdx.graph.desktop.DesktopLauncher \
+            --vmargs Xmx1G \
+            --resources core/assets \
+            --output $OUTDIR
+          tar -czf $WINDOWS_ZIP $OUTDIR
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: linux.zip
+          files: |
+            $LINUX_ZIP
+            $WINDOWS_ZIP
