@@ -32,8 +32,8 @@ jobs:
             JRE_WINDOWS_URL: https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.3%2B7/OpenJDK17U-jre_x64_windows_hotspot_17.0.3_7.zip
         run: |
           wget -O packr.jar $PACKR_URL
-          wget -O jre-linux.tar.gz JRE_LINUX_URL
-          wget -O jre-windows.zip JRE_WINDOWS_URL
+          wget -O jre-linux.tar.gz $JRE_LINUX_URL
+          wget -O jre-windows.zip $JRE_WINDOWS_URL
       - name: Build
         run: ./gradlew desktop:dist --no-daemon
       - name: Package Linux
